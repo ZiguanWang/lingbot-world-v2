@@ -1,0 +1,149 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+ncclDevKernel_Generic_4(ncclDevKernelArgsStorage<409...         0.00%       0.000us         0.00%       0.000us       0.000us       51.327s        46.28%       51.327s       6.381ms          8044  
+Cijk_Alik_Bljk_S_B_Bias_HA_S_SAV_UserArgs_MT8x8x8_SN...         0.00%       0.000us         0.00%       0.000us       0.000us       37.919s        34.19%       37.919s     315.993ms           120  
+Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x1...         0.00%       0.000us         0.00%       0.000us       0.000us        8.947s         8.07%        8.947s     459.290us         19480  
+                                               attn_fwd         0.00%       0.000us         0.00%       0.000us       0.000us        8.488s         7.65%        8.488s       2.652ms          3200  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     451.475ms         0.41%     451.475ms     275.290us          1640  
+                         Memcpy DtoD (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us     382.260ms         0.34%     382.260ms      23.436us         16311  
+void at::native::vectorized_templated_elementwise_ke...         0.00%       0.000us         0.00%       0.000us       0.000us     288.686ms         0.26%     288.686ms      90.214us          3200  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     262.862ms         0.24%     262.862ms      20.281us         12961  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     217.371ms         0.20%     217.371ms      33.753us          6440  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     204.584ms         0.18%     204.584ms      63.933us          3200  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     180.756ms         0.16%     180.756ms       4.693us         38520  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     170.803ms         0.15%     170.803ms      52.684us          3242  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     169.963ms         0.15%     169.963ms      53.114us          3200  
+void at::native::vectorized_templated_elementwise_ke...         0.00%       0.000us         0.00%       0.000us       0.000us     167.625ms         0.15%     167.625ms     104.765us          1600  
+void at::native::(anonymous namespace)::vectorized_l...         0.00%       0.000us         0.00%       0.000us       0.000us     167.028ms         0.15%     167.028ms      34.510us          4840  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     155.052ms         0.14%     155.052ms      48.697us          3184  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     148.307ms         0.13%     148.307ms      45.774us          3240  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     137.922ms         0.12%     137.922ms      16.261us          8482  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     126.424ms         0.11%     126.424ms      38.828us          3256  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     114.934ms         0.10%     114.934ms      35.917us          3200  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     102.886ms         0.09%     102.886ms      21.049us          4888  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     100.916ms         0.09%     100.916ms      31.147us          3240  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      96.329ms         0.09%      96.329ms      19.903us          4840  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      92.771ms         0.08%      92.771ms      19.168us          4840  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us      79.829ms         0.07%      79.829ms      48.676us          1640  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      59.043ms         0.05%      59.043ms      12.164us          4854  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us      46.598ms         0.04%      46.598ms      28.413us          1640  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      30.307ms         0.03%      30.307ms     378.840us            80  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us      29.736ms         0.03%      29.736ms      18.132us          1640  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us      29.274ms         0.03%      29.274ms       9.148us          3200  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us      28.737ms         0.03%      28.737ms      17.961us          1600  
+                           Memcpy HtoD (Host -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us      22.924ms         0.02%      22.924ms       3.374us          6794  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us      14.625ms         0.01%      14.625ms       2.285us          6400  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us      14.360ms         0.01%      14.360ms       4.224us          3400  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      13.117ms         0.01%      13.117ms       6.558ms             2  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us      12.557ms         0.01%      12.557ms       1.962us          6400  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      12.093ms         0.01%      12.093ms       2.499us          4840  
+Cijk_Alik_Bljk_S_B_Bias_HA_S_SAV_UserArgs_MT8x8x16_S...         0.00%       0.000us         0.00%       0.000us       0.000us      10.109ms         0.01%      10.109ms     252.728us            40  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us       9.082ms         0.01%       9.082ms       4.541ms             2  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       9.033ms         0.01%       9.033ms       1.403us          6440  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       8.675ms         0.01%       8.675ms       1.792us          4842  
+Cijk_Ailk_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x1...         0.00%       0.000us         0.00%       0.000us       0.000us       8.196ms         0.01%       8.196ms     204.901us            40  
+void at::native::(anonymous namespace)::write_indice...         0.00%       0.000us         0.00%       0.000us       0.000us       7.367ms         0.01%       7.367ms     526.241us            14  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us       5.627ms         0.01%       5.627ms     140.664us            40  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.624ms         0.00%       4.624ms       1.443us          3205  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.422ms         0.00%       4.422ms       1.365us          3240  
+void at::native::vectorized_templated_elementwise_ke...         0.00%       0.000us         0.00%       0.000us       0.000us       3.801ms         0.00%       3.801ms      95.014us            40  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us       3.335ms         0.00%       3.335ms       3.335ms             1  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       3.285ms         0.00%       3.285ms      82.135us            40  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       3.284ms         0.00%       3.284ms      82.094us            40  
+Cijk_Alik_Bljk_S_B_Bias_HA_S_SAV_UserArgs_MT16x16x8_...         0.00%       0.000us         0.00%       0.000us       0.000us       1.420ms         0.00%       1.420ms       1.420ms             1  
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       1.356ms         0.00%       1.356ms      37.672us            36  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us       1.326ms         0.00%       1.326ms      94.680us            14  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us       1.257ms         0.00%       1.257ms      33.084us            38  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us       1.156ms         0.00%       1.156ms      82.592us            14  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     945.338us         0.00%     945.338us     236.335us             4  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     840.589us         0.00%     840.589us      11.675us            72  
+                                               Im3d2Col         0.00%       0.000us         0.00%       0.000us       0.000us     712.829us         0.00%     712.829us      17.821us            40  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     696.945us         0.00%     696.945us      17.424us            40  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     496.232us         0.00%     496.232us       6.892us            72  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     491.869us         0.00%     491.869us      12.297us            40  
+                                        Memset (Device)         0.00%       0.000us         0.00%       0.000us       0.000us     476.990us         0.00%     476.990us       3.786us           126  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us     463.750us         0.00%     463.750us     231.875us             2  
+void at::native::vectorized_elementwise_kernel<16, a...         0.00%       0.000us         0.00%       0.000us       0.000us     443.657us         0.00%     443.657us      29.577us            15  
+                           Memcpy DtoH (Device -> Host)         0.00%       0.000us         0.00%       0.000us       0.000us     423.912us         0.00%     423.912us     423.912us             1  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us     404.031us         0.00%     404.031us     202.015us             2  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     368.428us         0.00%     368.428us       7.676us            48  
+void at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us     363.791us         0.00%     363.791us     181.895us             2  
+void at::native::(anonymous namespace)::distribution...         0.00%       0.000us         0.00%       0.000us       0.000us     329.250us         0.00%     329.250us      13.170us            25  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     324.426us         0.00%     324.426us       6.759us            48  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     319.523us         0.00%     319.523us       9.985us            32  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us     263.912us         0.00%     263.912us       6.598us            40  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     250.234us         0.00%     250.234us     125.117us             2  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     249.913us         0.00%     249.913us     124.956us             2  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     244.951us         0.00%     244.951us       6.124us            40  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     206.104us         0.00%     206.104us      15.854us            13  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us     160.424us         0.00%     160.424us      11.459us            14  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     131.884us         0.00%     131.884us       4.121us            32  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us     124.304us         0.00%     124.304us      10.359us            12  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     110.704us         0.00%     110.704us       8.516us            13  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      96.536us         0.00%      96.536us       4.022us            24  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      96.348us         0.00%      96.348us       8.029us            12  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      87.326us         0.00%      87.326us       2.729us            32  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      69.757us         0.00%      69.757us       1.744us            40  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      69.663us         0.00%      69.663us       5.359us            13  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      67.398us         0.00%      67.398us       1.685us            40  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us      63.962us         0.00%      63.962us       1.683us            38  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      62.288us         0.00%      62.288us       1.946us            32  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us      60.078us         0.00%      60.078us      60.078us             1  
+void rocprim::ROCPRIM_400200_NS::detail::init_lookba...         0.00%       0.000us         0.00%       0.000us       0.000us      57.081us         0.00%      57.081us       1.502us            38  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us      54.438us         0.00%      54.438us      27.219us             2  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us      50.015us         0.00%      50.015us       2.084us            24  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      38.854us         0.00%      38.854us       1.619us            24  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us      33.718us         0.00%      33.718us      33.718us             1  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      28.597us         0.00%      28.597us       9.532us             3  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      18.558us         0.00%      18.558us      18.558us             1  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us      17.990us         0.00%      17.990us       1.799us            10  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      12.519us         0.00%      12.519us      12.519us             1  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us       6.797us         0.00%       6.797us       2.266us             3  
+void rocprim::ROCPRIM_400200_NS::detail::trampoline_...         0.00%       0.000us         0.00%       0.000us       0.000us       3.719us         0.00%       3.719us       3.719us             1  
+void (anonymous namespace)::elementwise_kernel_with_...         0.00%       0.000us         0.00%       0.000us       0.000us       3.438us         0.00%       3.438us       1.719us             2  
+                                   hipDeviceSynchronize         0.00%     210.880us         0.00%     210.880us       9.585us       0.000us         0.00%       0.000us       0.000us            22  
+                                          hipMemGetInfo         0.00%      75.720us         0.00%      75.720us       4.454us       0.000us         0.00%       0.000us       0.000us            17  
+                     hipThreadExchangeStreamCaptureMode         0.00%       5.777ms         0.00%       5.778ms       0.358us       0.000us         0.00%       0.000us       0.000us         16142  
+                                hipStreamGetCaptureInfo         0.00%       2.006ms         0.00%       2.006ms       0.337us       0.000us         0.00%       0.000us       0.000us          5958  
+                                    hipMemcpyWithStream         0.14%     161.473ms         0.14%     161.481ms      27.103us       0.000us         0.00%       0.000us       0.000us          5958  
+                                   hipStreamIsCapturing         0.00%       5.701ms         0.00%       5.701ms       0.696us       0.000us         0.00%       0.000us       0.000us          8192  
+                                        hipLaunchKernel         7.72%        9.134s         7.72%        9.135s      52.915us       0.000us         0.00%       0.000us       0.000us        172627  
+                                         hipMemsetAsync         0.00%     669.904us         0.00%     669.904us       5.446us       0.000us         0.00%       0.000us       0.000us           123  
+                                          hipHostMalloc         0.00%     751.095us         0.00%     751.095us     187.774us       0.000us         0.00%       0.000us       0.000us             4  
+                            hipGetDevicePropertiesR0600         0.04%      43.871ms         0.04%      43.872ms       0.599us       0.000us         0.00%       0.000us       0.000us         73190  
+                                  hipDeviceGetAttribute         0.00%       4.578ms         0.00%       4.578ms       0.326us       0.000us         0.00%       0.000us       0.000us         14055  
+                                              hipMalloc         0.16%     188.922ms         0.16%     188.924ms       1.889ms       0.000us         0.00%       0.000us       0.000us           100  
+                                              hipMemset         0.00%      24.920us         0.00%      24.920us       8.307us       0.000us         0.00%       0.000us       0.000us             3  
+                                          hipModuleLoad         0.75%     884.615ms         0.75%     884.620ms     221.155ms       0.000us         0.00%       0.000us       0.000us             4  
+                                   hipRuntimeGetVersion         0.00%      87.420us         0.00%      87.420us       0.075us       0.000us         0.00%       0.000us       0.000us          1160  
+                               hipExtModuleLaunchKernel        40.11%       47.468s        40.11%       47.469s       2.407ms       0.000us         0.00%       0.000us       0.000us         19721  
+                                                hipFree         0.02%      22.031ms         0.02%      22.031ms     209.823us       0.000us         0.00%       0.000us       0.000us           105  
+                             hipStreamGetCaptureInfo_v2         0.00%       2.971ms         0.00%       2.971ms       0.369us       0.000us         0.00%       0.000us       0.000us          8044  
+                                     hipExtLaunchKernel        43.59%       51.593s        43.59%       51.597s       6.414ms       0.000us         0.00%       0.000us       0.000us          8044  
+                                         hipEventRecord         0.03%      39.414ms         0.03%      39.416ms       1.876us       0.000us         0.00%       0.000us       0.000us         21009  
+                                        hipEventDestroy         0.01%       6.422ms         0.01%       6.422ms       0.565us       0.000us         0.00%       0.000us       0.000us         11362  
+                            hipStreamCreateWithPriority         0.00%       2.604ms         0.00%       2.604ms       1.302ms       0.000us         0.00%       0.000us       0.000us             2  
+                                     hipStreamWaitEvent         0.02%      19.117ms         0.02%      19.117ms       5.756us       0.000us         0.00%       0.000us       0.000us          3321  
+                                                hipInit         0.00%       0.190us         0.00%       0.190us       0.190us       0.000us         0.00%       0.000us       0.000us             1  
+                                      hipModuleLoadData         0.00%     836.326us         0.00%     836.326us     836.326us       0.000us         0.00%       0.000us       0.000us             1  
+                                         hipMemcpyAsync         0.05%      62.822ms         0.05%      62.823ms       3.664us       0.000us         0.00%       0.000us       0.000us         17148  
+                                   hipDeviceGetPCIBusId         0.00%     103.718us         0.00%     103.718us       0.617us       0.000us         0.00%       0.000us       0.000us           168  
+                                 hipDeviceCanAccessPeer         0.00%       3.870us         0.00%       3.870us       0.138us       0.000us         0.00%       0.000us       0.000us            28  
+                               hipStreamCreateWithFlags         0.03%      38.470ms         0.03%      38.470ms       1.374ms       0.000us         0.00%       0.000us       0.000us            28  
+                                  hipExtMallocWithFlags         0.02%      20.085ms         0.02%      20.085ms     717.307us       0.000us         0.00%       0.000us       0.000us            28  
+                                   hipStreamSynchronize         0.00%       1.171ms         0.00%       1.171ms      37.773us       0.000us         0.00%       0.000us       0.000us            31  
+                                       hipStreamDestroy         0.01%      14.675ms         0.01%      14.675ms     524.117us       0.000us         0.00%       0.000us       0.000us            28  
+                                     hipIpcGetMemHandle         0.00%     844.313us         0.00%     844.313us      30.154us       0.000us         0.00%       0.000us       0.000us            28  
+                                    hipIpcOpenMemHandle         0.02%      19.874ms         0.02%      19.874ms     709.799us       0.000us         0.00%       0.000us       0.000us            28  
+                                      hipGetProcAddress         0.00%      12.230us         0.00%      12.230us       2.038us       0.000us         0.00%       0.000us       0.000us             6  
+                                    hipModuleLoadDataEx         0.01%       6.439ms         0.01%       6.439ms       1.073ms       0.000us         0.00%       0.000us       0.000us             6  
+                                    hipFuncGetAttribute         0.00%       4.580us         0.00%       4.580us       0.254us       0.000us         0.00%       0.000us       0.000us            18  
+                                 hipPointerGetAttribute         0.01%       7.165ms         0.01%       7.165ms       0.320us       0.000us         0.00%       0.000us       0.000us         22400  
+                                  hipModuleLaunchKernel         7.26%        8.594s         7.26%        8.595s       2.686ms       0.000us         0.00%       0.000us       0.000us          3200  
+                                    hipEventSynchronize         0.00%       2.448ms         0.00%       2.448ms       1.532us       0.000us         0.00%       0.000us       0.000us          1598  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 118.355s
+Self CUDA time total: 110.911s
+
+key_averages_table_s=24.838574

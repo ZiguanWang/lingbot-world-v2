@@ -1,0 +1,13 @@
+/opt/venv/lib/python3.12/site-packages/flash_attn/flash_attn_interface.py:17: UserWarning: flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation
+  warnings.warn("flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation")
+[aiter] import [module_aiter_core] under /home/roywan/aiter/aiter/jit/module_aiter_core.so
+VAE_CONFIG hip_launch_blocking=None miopen_find_mode=None miopen_deterministic=None torch_deterministic=False explicit_sync=False dtype=fp32
+VAE_PROBE stage=model_ready allocated_gib=0.494 reserved_gib=0.498 peak_gib=0.494 device_used_gib=0.752
+VAE_LOADED path=benchmark_latents/sync_17req_13actual.pt shape=(16, 4, 58, 104)
+/opt/venv/lib/python3.12/site-packages/torch/profiler/profiler.py:217: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+[W805 06:48:32.210035845 collection.cpp:1148] Warning: ROCTracer produced duplicate flow start: 1 (function operator())
+VAE_PROBE stage=decode_done allocated_gib=0.551 reserved_gib=18.857 peak_gib=12.780 device_used_gib=19.277 shape=(3, 13, 464, 832) finite=15055872/15055872
+VAE_COMPUTE_TIME seconds=331.130249
+VAE_PROFILE prefix=profiles/vae17/vae17_decode_fp32
+VAE_VIDEO_SAVED path=benchmark_vae17/fp32_decode/vae17.mp4

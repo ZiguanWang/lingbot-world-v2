@@ -164,6 +164,7 @@ class WanI2VCausal:
         dit_fsdp=False,
         use_sp=False,
         t5_cpu=False,
+        t5_rank0_cpu=False,
         init_on_cpu=True,
         convert_model_dtype=False,
         pipe_dtype=torch.bfloat16,
@@ -216,6 +217,7 @@ class WanI2VCausal:
         self.config = config
         self.rank = rank
         self.t5_cpu = t5_cpu
+        self.t5_rank0_cpu = t5_rank0_cpu
         self.init_on_cpu = init_on_cpu
 
         self.num_train_timesteps = config.num_train_timesteps
@@ -242,6 +244,14 @@ class WanI2VCausal:
 
         self.vae_stride = config.vae_stride
         self.patch_size = config.patch_size
+        vae_dtype_name = os.getenv("LINGBOT_VAE_DTYPE", "fp32").lower()
+        if vae_dtype_name not in ("fp32", "bf16"):
+            raise ValueError(
+                "LINGBOT_VAE_DTYPE must be 'fp32' or 'bf16', got "
+                f"{vae_dtype_name!r}")
+        vae_dtype = (torch.float32 if vae_dtype_name == "fp32"
+                     else torch.bfloat16)
+        logging.info("VAE compute dtype: %s", vae_dtype_name)
         self.vae = Wan2_1_VAE(
             vae_pth=_resolve_asset_path(
                 config.vae_checkpoint, checkpoint_dir, assets_dir),
@@ -267,6 +277,13 @@ class WanI2VCausal:
                 torch.bfloat16,
             )
 
+        # Align all ranks before FSDP constructor/flatten collectives.  Model
+        # loading and optional diagnostics do different amounts of host work
+        # per rank, and entering nested FSDP wrapping with large rank skew is
+        # unreliable on the current PyTorch 2.10 ROCm stack.
+        if (dist.is_initialized() and
+                os.getenv("LINGBOT_FSDP_PRE_WRAP_BARRIER", "1") == "1"):
+            dist.barrier()
         self.model = self._configure_model(
             model=self.model,
             use_sp=use_sp,
@@ -301,6 +318,43 @@ class WanI2VCausal:
     def clear_text_cache(self):
         """Drop all cached T5 prompt embeddings. Frees ~4 MB per entry."""
         self._t5_cache.clear()
+
+    def _log_cuda_memory(self, stage):
+        """Log rank-0 allocator and device memory for staged diagnostics."""
+        if os.getenv("LINGBOT_MEMORY_PROFILE", "0") != "1":
+            return
+        torch.cuda.synchronize(self.device)
+        free_b, total_b = torch.cuda.mem_get_info(self.device)
+        allocated_b = torch.cuda.memory_allocated(self.device)
+        reserved_b = torch.cuda.memory_reserved(self.device)
+        peak_b = torch.cuda.max_memory_allocated(self.device)
+        if self.rank == 0:
+            logging.info(
+                "MEMORY stage=%s allocated_gib=%.3f reserved_gib=%.3f "
+                "peak_allocated_gib=%.3f device_used_gib=%.3f device_free_gib=%.3f",
+                stage, allocated_b / 2**30, reserved_b / 2**30,
+                peak_b / 2**30, (total_b - free_b) / 2**30, free_b / 2**30)
+
+    def _log_tensor_stats(self, stage, tensor):
+        """Log validity/range for memory-profile runs without copying tensors."""
+        if (os.getenv("LINGBOT_MEMORY_PROFILE", "0") != "1" and
+                os.getenv("LINGBOT_ACTIVATION_PROBE", "0") != "1"):
+            return
+        finite = torch.isfinite(tensor)
+        finite_count = finite.sum().item()
+        total = tensor.numel()
+        if finite_count:
+            values = tensor[finite]
+            min_v = values.min().item()
+            max_v = values.max().item()
+            mean_v = values.float().mean().item()
+        else:
+            min_v = max_v = mean_v = float("nan")
+        if self.rank == 0:
+            logging.info(
+                "TENSOR stage=%s shape=%s dtype=%s finite=%d/%d min=%.6g max=%.6g mean=%.6g",
+                stage, tuple(tensor.shape), tensor.dtype, finite_count, total,
+                min_v, max_v, mean_v)
 
     def prewarm(
         self,
@@ -603,7 +657,9 @@ class WanI2VCausal:
             batch_size = len(input_prompt)
         else:
             batch_size = 1
-        
+
+        self._log_cuda_memory("generate_start")
+
         assert action_path is not None, "action_path is required"
         c2ws = np.load(os.path.join(action_path, "poses.npy")) # opencv coordinate
         len_c2ws = ((len(c2ws) - 1) // 4) * 4 + 1
@@ -655,6 +711,7 @@ class WanI2VCausal:
                            dim=1)
         msk = msk.view(1, msk.shape[1] // 4, 4, lat_h, lat_w)
         msk = msk.transpose(1, 2)[0]
+        self._log_cuda_memory("inputs_noise_mask_ready")
 
         # 2. Prepare timesteps
         self.scheduler.set_timesteps(self.num_train_timesteps, shift=shift)
@@ -668,7 +725,14 @@ class WanI2VCausal:
         if cache_key in self._t5_cache:
             context = self._t5_cache[cache_key]
         else:
-            if not self.t5_cpu:
+            if self.t5_rank0_cpu:
+                context_obj = [None]
+                if self.rank == 0:
+                    context_obj[0] = self.text_encoder(
+                        [input_prompt], torch.device('cpu'))[0].cpu()
+                dist.broadcast_object_list(context_obj, src=0)
+                context = [context_obj[0].to(self.device)]
+            elif not self.t5_cpu:
                 self.text_encoder.model.to(self.device)
                 context = self.text_encoder([input_prompt], self.device)
                 if offload_model:
@@ -677,6 +741,8 @@ class WanI2VCausal:
                 context = self.text_encoder([input_prompt], torch.device('cpu'))
                 context = [t.to(self.device) for t in context]
             self._t5_cache[cache_key] = context
+        self._log_tensor_stats("t5_context", context[0])
+        self._log_cuda_memory("t5_context_ready")
 
         Ks = torch.from_numpy(np.load(os.path.join(action_path, "intrinsics.npy"))).float()
 
@@ -725,17 +791,60 @@ class WanI2VCausal:
             wasd_action_tensor = wasd_action_tensor[None, ...] # [b, f*h*w, c]
             wasd_action_tensor = rearrange(wasd_action_tensor, 'b (f h w) c -> b c f h w', f=lat_f, h=lat_h, w=lat_w).to(self.param_dtype)
             c2ws_plucker_emb = torch.cat([c2ws_plucker_emb, wasd_action_tensor], dim=1)
+        self._log_tensor_stats("camera_control", c2ws_plucker_emb)
+        self._log_cuda_memory("camera_control_ready")
 
-        y = self.vae.encode([
-            torch.concat([
-                torch.nn.functional.interpolate(
-                    img[None].cpu(), size=(h, w), mode='bicubic').transpose(
-                        0, 1),
-                torch.zeros(3, F - 1, h, w)
-            ],
-                         dim=1).to(self.device)
-        ])[0]
-        y = torch.concat([msk, y])
+        # VAE encode needs a large contiguous workspace. Release inactive
+        # allocator blocks left by model/T5 setup before that peak allocation.
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
+        # VAE is not distributed. Running the identical encoder on all ranks
+        # wastes 7x work and has repeatedly triggered ROCm GPU hangs on the
+        # 8x32-GiB system. Encode once on rank 0 and broadcast the compact
+        # 16-channel latent condition (~tens of MiB even for long videos).
+        vae_condition_file = os.getenv("LINGBOT_VAE_CONDITION_FILE")
+        if self.rank == 0:
+            if vae_condition_file:
+                vae_condition = torch.load(
+                    vae_condition_file, map_location=self.device,
+                    weights_only=True)
+                expected_shape = (16, lat_f, lat_h, lat_w)
+                if tuple(vae_condition.shape) != expected_shape:
+                    raise ValueError(
+                        f"Precomputed VAE condition shape {tuple(vae_condition.shape)} "
+                        f"does not match expected {expected_shape}")
+                if not torch.isfinite(vae_condition).all():
+                    raise ValueError("Precomputed VAE condition contains NaN/Inf")
+                logging.info("Loaded precomputed VAE condition from %s", vae_condition_file)
+            else:
+                vae_condition = self.vae.encode([
+                    torch.concat([
+                        torch.nn.functional.interpolate(
+                            img[None].cpu(), size=(h, w), mode='bicubic').transpose(
+                                0, 1),
+                        torch.zeros(3, F - 1, h, w)
+                    ],
+                                 dim=1).to(self.device)
+                ])[0]
+        else:
+            vae_condition = torch.empty(
+                16, lat_f, lat_h, lat_w,
+                dtype=torch.float32, device=self.device)
+        if dist.is_initialized():
+            # VAE encode runs only on rank 0's compute stream, while the
+            # broadcast may use a process-group communication stream. Keep an
+            # optional defensive producer/consumer synchronization. Controlled
+            # A/B runs are byte-identical with this enabled or disabled, so it
+            # is not the fix for the historical VAE NaN issue.
+            if (self.rank == 0 and
+                    os.getenv("LINGBOT_SYNC_VAE_BROADCAST", "1") == "1"):
+                torch.cuda.synchronize(self.device)
+            dist.broadcast(vae_condition, src=0)
+        self._log_tensor_stats("vae_condition", vae_condition)
+        self._log_tensor_stats("noise", noise)
+        self._log_tensor_stats("mask", msk)
+        y = torch.concat([msk, vae_condition])
+        self._log_cuda_memory("vae_encode_done")
 
         @contextmanager
         def noop_no_sync():
@@ -763,6 +872,7 @@ class WanI2VCausal:
                                                           shape=cross_kv_shape,
                                                           dtype=transformer_dtype,
                                                           device=self.device)
+        self._log_cuda_memory("kv_cache_ready")
         # evaluation mode
         with (
                 torch.amp.autocast('cuda', dtype=self.param_dtype),
@@ -777,6 +887,7 @@ class WanI2VCausal:
             num_inference_chunk = len(latents_chunk)
             pred_latent_chunks = []
             for chunk_id in tqdm(range(num_inference_chunk)):
+                chunk_wall_start = time.perf_counter()
                 current_latent = latents_chunk[chunk_id]
                 current_condition = condition_chunk[chunk_id]
                 current_c2ws_plucker_emb = c2ws_plucker_emb_chunk[chunk_id]
@@ -830,6 +941,7 @@ class WanI2VCausal:
                         break
 
                 pred_latent_chunks.append(x0)
+                self._log_tensor_stats(f"dit_chunk_{chunk_id}_x0", x0)
 
                 # Update kv cache
                 context_timestep = [timesteps[-1] * 0.0]
@@ -837,15 +949,102 @@ class WanI2VCausal:
                 self.model(x=[x0], t=timestep,
                            cross_attn_first_call=False,
                            **kwargs)
+                self._log_cuda_memory(f"dit_chunk_{chunk_id}_done")
+                if os.getenv("LINGBOT_CHUNK_TIMING", "0") == "1":
+                    torch.cuda.synchronize(self.device)
+                    chunk_wall_s = time.perf_counter() - chunk_wall_start
+                    if self.rank == 0:
+                        logging.info(
+                            "CHUNK_TIMING chunk=%d latent_frames=%d rgb_frames=%d wall_s=%.6f",
+                            chunk_id, current_latent.shape[1],
+                            current_latent.shape[1] * self.vae_stride[0] -
+                            (self.vae_stride[0] - 1 if chunk_id == 0 else 0),
+                            chunk_wall_s)
 
             pred_latent_chunks = torch.cat(pred_latent_chunks, dim=1)
+            self._log_tensor_stats("pred_latent", pred_latent_chunks)
 
-            if offload_model:
+            # Optional hard stage boundary for diagnosing ROCm/FSDP stream
+            # interactions: persist the fully sampled latent on rank 0 so a
+            # fresh, non-distributed process can perform VAE decode.  Saving
+            # a CPU tensor after an explicit device synchronization prevents
+            # the consumer from inheriting any allocator, stream, FSDP, or
+            # RCCL state from this process.
+            pred_latent_file = os.getenv("LINGBOT_PRED_LATENT_FILE")
+            if pred_latent_file and self.rank == 0:
+                torch.cuda.synchronize(self.device)
+                pred_latent_cpu = pred_latent_chunks.detach().float().cpu()
+                if not torch.isfinite(pred_latent_cpu).all():
+                    raise RuntimeError("Refusing to save a non-finite DiT latent")
+                os.makedirs(os.path.dirname(os.path.abspath(pred_latent_file)),
+                            exist_ok=True)
+                torch.save(pred_latent_cpu, pred_latent_file)
+                logging.info("Saved finite DiT latent to %s shape=%s",
+                             pred_latent_file, tuple(pred_latent_cpu.shape))
+                del pred_latent_cpu
+
+            # Sampling is complete. The caches and conditioning tensors are
+            # several GiB at long sequence lengths and are not needed by VAE
+            # decode; release them before rank 0 reaches its decode peak.
+            del kwargs, current_latent, current_condition, current_c2ws_plucker_emb
+            del dit_cond_dict, noise_pred, x0
+            del self_kv_cache, cross_kv_cache
+            del latent, latents_chunk, condition_chunk, c2ws_plucker_emb_chunk
+            del y, vae_condition, noise, msk, c2ws_plucker_emb
+            torch.cuda.synchronize(self.device)
+            torch.cuda.empty_cache()
+            self._log_cuda_memory("before_vae_decode_after_cache_release")
+
+            # On 32-GiB devices, fully asynchronous DiT execution can leave
+            # too little room for the VAE decoder's 7.5-GiB convolution
+            # workspace. Allow a one-shot phase boundary: DiT generation
+            # itself remains no-offload, then the completed DiT object is
+            # destroyed before VAE decode.
+            stage_release_dit = (
+                os.getenv("LINGBOT_STAGE_OFFLOAD_DIT_BEFORE_VAE", "0") == "1"
+            )
+            if stage_release_dit:
+                # FSDP's flat parameters are not released by module.cpu() on
+                # this ROCm/PyTorch stack. This path is intentionally one-shot:
+                # destroy the completed DiT stage so its shards and runtime
+                # buffers cannot compete with the VAE decoder workspace.
+                del self.model
+                self.model = None
+                gc.collect()
+                torch.cuda.synchronize(self.device)
+                torch.cuda.empty_cache()
+                if self.rank == 0:
+                    free_b, total_b = torch.cuda.mem_get_info(self.device)
+                    logging.info(
+                        "STAGE_RELEASE dit allocated_gib=%.3f reserved_gib=%.3f "
+                        "device_free_gib=%.3f",
+                        torch.cuda.memory_allocated(self.device) / 2**30,
+                        torch.cuda.memory_reserved(self.device) / 2**30,
+                        free_b / 2**30)
+            elif offload_model:
                 self.model.cpu()
                 torch.cuda.empty_cache()
 
-            if self.rank == 0:
-                videos = self.vae.decode([pred_latent_chunks])
+            skip_inprocess_vae_decode = (
+                os.getenv("LINGBOT_SKIP_INPROCESS_VAE_DECODE", "0") == "1"
+            )
+            if skip_inprocess_vae_decode:
+                if not pred_latent_file:
+                    raise ValueError(
+                        "LINGBOT_SKIP_INPROCESS_VAE_DECODE=1 requires "
+                        "LINGBOT_PRED_LATENT_FILE")
+                videos = [None] if self.rank == 0 else None
+                if self.rank == 0:
+                    logging.info(
+                        "Skipping in-process VAE decode; use the saved latent "
+                        "from %s in a fresh process", pred_latent_file)
+            elif self.rank == 0:
+                # Stream completed RGB chunks to host memory so long videos
+                # do not retain the entire decoded output on rank-0 VRAM.
+                videos = self.vae.decode(
+                    [pred_latent_chunks], output_device=torch.device("cpu"))
+                self._log_tensor_stats("vae_decoded_video", videos[0])
+            self._log_cuda_memory("vae_decode_done")
 
         # del noise, latent, x0
         # del sample_scheduler
@@ -982,7 +1181,7 @@ class WanI2VCausal:
                 [
                     torch.nn.functional.interpolate(img[None].cpu(), size=(h, w), mode='bicubic').transpose(0, 1),
                     torch.zeros(3, F - 1, h, w)
-                ], 
+                ],
                 dim=1,
             ).to(self.device)
         ])[0]

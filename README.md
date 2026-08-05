@@ -81,6 +81,9 @@ Clone the repo:
 git clone https://github.com/robbyant/lingbot-world-v2.git
 cd lingbot-world-v2
 ```
+
+#### NVIDIA CUDA
+
 Install dependencies:
 ```sh
 # Ensure torch >= 2.4.0
@@ -90,6 +93,83 @@ Install [`flash_attn`](https://github.com/Dao-AILab/flash-attention):
 ```sh
 pip install flash-attn --no-build-isolation
 ```
+
+#### AMD ROCm
+
+Install dependencies in a ROCm PyTorch environment. The example below uses the ROCm PyTorch container; alternatively,
+install a ROCm build of PyTorch from [pytorch.org](https://pytorch.org/get-started/locally/).
+
+From the host, replace `/path/to/workspace` with the local checkout directory and start the container:
+
+```sh
+docker pull rocm/pytorch:latest
+
+docker run --rm -it \
+  --device=/dev/kfd \
+  --device=/dev/dri \
+  --group-add video \
+  --ipc=host \
+  --shm-size=64G \
+  --security-opt seccomp=unconfined \
+  -v /path/to/workspace:/workspace \
+  -w /workspace \
+  rocm/pytorch:latest \
+  bash
+```
+
+Install [`flash_attn`](https://github.com/Dao-AILab/flash-attention) from the official repository using its AMD Triton
+backend. The official repository bundles AITER as a submodule. On a ROCm PyTorch image, keep the image's matching
+Triton installation with `AITER_USE_SYSTEM_TRITON=1`; no separate AITER installation is required:
+
+```sh
+cd /workspace
+git clone https://github.com/Dao-AILab/flash-attention.git
+cd flash-attention
+FLASH_ATTENTION_TRITON_AMD_ENABLE="TRUE" \
+AITER_USE_SYSTEM_TRITON=1 \
+pip install --no-build-isolation .
+```
+
+Then install the LingBot-World dependencies:
+
+```sh
+cd /workspace/lingbot-world-v2
+pip install -r requirements.txt
+```
+
+Keep the AMD backend enabled when running inference:
+
+```sh
+export FLASH_ATTENTION_TRITON_AMD_ENABLE="TRUE"
+```
+
+Verify the installed AMD backend:
+
+```sh
+FLASH_ATTENTION_TRITON_AMD_ENABLE="TRUE" pytest tests/test_flash_attn_triton_amd.py
+```
+
+To verify the effective runtime route rather than relying on an implicit fallback:
+
+```sh
+FLASH_ATTENTION_TRITON_AMD_ENABLE="TRUE" python3 - <<'PY'
+import torch
+import triton
+import aiter
+import flash_attn.flash_attn_interface as fai
+
+print("PyTorch:", torch.__version__, "HIP:", torch.version.hip)
+print("Triton:", triton.__version__, triton.__file__)
+print("AITER:", aiter.__file__)
+print("FlashAttention:", fai.__file__)
+print("USE_TRITON_ROCM:", fai.USE_TRITON_ROCM)
+print("backend:", fai.flash_attn_gpu.__name__)
+PY
+```
+
+For the AMD path, `USE_TRITON_ROCM` must be `True`, and `backend` should resolve under
+`aiter.ops.triton._triton_kernels.flash_attn_triton_amd`.
+
 ### Model Download
 
 | Model | Model Type | Model Size | Download Links |
@@ -164,7 +244,7 @@ If you find this work useful for your research, please cite our paper:
 
 ```
 @article{lingbot-world-v2,
-      title={Infinite Worlds with Versatile Interactions}, 
+      title={Infinite Worlds with Versatile Interactions},
       author={Zelin Gao and Qiuyu Wang and Jiapeng Zhu and Jingye Chen and Zichen Liu and Qingyan Bai and Jiahao Wang and Yufeng Yuan and Hanlin Wang and Yichong Lu and Ka Leong Cheng and Haojie Zhang and Jian Gao and Tianrui Feng and Yuzheng Liu and Yao Yao and Yinghao Xu and Xing Zhu and Yujun Shen and Hao Ouyang},
       journal={arXiv preprint arXiv:2607.07534},
       year={2026}

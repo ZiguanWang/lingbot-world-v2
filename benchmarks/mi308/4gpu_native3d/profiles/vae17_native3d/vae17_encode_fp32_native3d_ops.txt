@@ -1,0 +1,130 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                               aten::miopen_convolution         0.13%     144.843ms        99.86%      114.681s     932.364ms      114.126s        99.82%      114.150s     928.048ms           123  
+naive_conv_ab_nonpacked_fwd_ncdhw_float_double_float...         0.00%       0.000us         0.00%       0.000us       0.000us      104.945s        91.79%      104.945s     624.673ms           168  
+    naive_conv_ab_nonpacked_fwd_nchw_float_double_float         0.00%       0.000us         0.00%       0.000us       0.000us        4.128s         3.61%        4.128s      64.507ms            64  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us        1.328s         1.16%        1.328s      12.412ms           107  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us     967.037ms         0.85%     967.037ms      30.220ms            32  
+Cijk_Ailk_Bljk_SB_MT128x128x32_MI16x16x4x1_SN_1LDSB1...         0.00%       0.000us         0.00%       0.000us       0.000us     781.673ms         0.68%     781.673ms       4.571ms           171  
+                                               Im3d2Col         0.00%       0.000us         0.00%       0.000us       0.000us     651.215ms         0.57%     651.215ms       5.294ms           123  
+        miopenSp3AsmConv_v30_3_1_gfx9_fp32_f2x3_stride2         0.00%       0.000us         0.00%       0.000us       0.000us     280.551ms         0.25%     280.551ms       5.845ms            48  
+Cijk_Ailk_Bljk_SB_MT64x128x16_MI16x16x4x1_SN_1LDSB1_...         0.00%       0.000us         0.00%       0.000us       0.000us     173.152ms         0.15%     173.152ms       6.413ms            27  
+        miopenSp3AsmConv_v30_3_1_gfx9_fp32_f3x2_stride2         0.00%       0.000us         0.00%       0.000us       0.000us     129.900ms         0.11%     129.900ms       2.706ms            48  
+                          batched_transpose_32x32_dword         0.00%       0.000us         0.00%       0.000us       0.000us     114.581ms         0.10%     114.581ms     155.049us           739  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      99.073ms         0.09%      99.073ms       2.064ms            48  
+                          batched_transpose_32x16_dword         0.00%       0.000us         0.00%       0.000us       0.000us      66.711ms         0.06%      66.711ms     264.724us           252  
+                     aten::_efficient_attention_forward         0.00%       1.836ms         0.00%       2.827ms     706.793us      61.314ms         0.05%      61.314ms      15.328ms             4  
+                                               attn_fwd         0.00%       0.000us         0.00%       0.000us       0.000us      61.314ms         0.05%      61.314ms      15.328ms             4  
+Cijk_Ailk_Bljk_SB_MT128x128x32_MI16x16x4x1_SN_1LDSB1...         0.00%       0.000us         0.00%       0.000us       0.000us      61.239ms         0.05%      61.239ms       7.655ms             8  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      53.555ms         0.05%      53.555ms     158.447us           338  
+                                            aten::copy_         0.00%       1.141ms         0.00%       2.714ms      12.225us      39.779ms         0.03%      39.779ms     179.185us           222  
+igemm_fwd_gtcx3_nhwc_fp32_bx0_ex1_bt128x128x8_wt32x3...         0.00%       0.000us         0.00%       0.000us       0.000us      35.725ms         0.03%      35.725ms       3.248ms            11  
+igemm_fwd_gtcx3_nhwc_fp32_bx0_ex1_bt128x64x16_wt32x3...         0.00%       0.000us         0.00%       0.000us       0.000us      35.101ms         0.03%      35.101ms       1.755ms            20  
+                          batched_transpose_16x32_dword         0.00%       0.000us         0.00%       0.000us       0.000us      31.614ms         0.03%      31.614ms      74.561us           424  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      30.513ms         0.03%      30.513ms       1.526ms            20  
+Cijk_Ailk_Bljk_SB_MT64x128x16_MI16x16x4x1_SN_1LDSB1_...         0.00%       0.000us         0.00%       0.000us       0.000us      30.376ms         0.03%      30.376ms       1.787ms            17  
+                                            Im2d2Col_v2         0.00%       0.000us         0.00%       0.000us       0.000us      29.397ms         0.03%      29.397ms     282.662us           104  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      28.026ms         0.02%      28.026ms       3.503ms             8  
+igemm_fwd_gtcx3_nhwc_fp32_bx0_ex1_bt128x64x16_wt32x3...         0.00%       0.000us         0.00%       0.000us       0.000us      26.198ms         0.02%      26.198ms     903.363us            29  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      24.239ms         0.02%      24.239ms     195.480us           124  
+                                             aten::add_         0.00%       1.526ms         0.04%      43.514ms     353.770us      24.233ms         0.02%      24.233ms     197.019us           123  
+Cijk_Ailk_Bljk_SB_MT128x128x16_MI16x16x4x1_SN_1LDSB0...         0.00%       0.000us         0.00%       0.000us       0.000us      23.056ms         0.02%      23.056ms       1.441ms            16  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      21.620ms         0.02%      21.620ms       2.703ms             8  
+        miopenSp3AsmConv_v30_3_1_gfx9_fp32_f2x3_stride1         0.00%       0.000us         0.00%       0.000us       0.000us      20.421ms         0.02%      20.421ms       1.276ms            16  
+                                              aten::mul         0.00%       1.371ms         0.00%       2.606ms      14.723us      18.199ms         0.02%      18.199ms     102.821us           177  
+                                              aten::cat         0.00%       1.603ms         0.00%       3.254ms      32.538us      16.251ms         0.01%      16.251ms     162.506us           100  
+Cijk_Ailk_Bljk_SB_MT128x128x16_MI16x16x4x1_SN_1LDSB1...         0.00%       0.000us         0.00%       0.000us       0.000us      15.549ms         0.01%      15.549ms     647.881us            24  
+                                              aten::div         0.00%     874.244us         0.02%      26.575ms     301.993us      13.188ms         0.01%      13.188ms     149.860us            88  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      13.188ms         0.01%      13.188ms     149.860us            88  
+                                              aten::add         0.00%       1.011ms         0.00%       1.896ms      14.365us      12.185ms         0.01%      12.185ms      92.311us           132  
+void ck::tensor_operation::device::(anonymous namesp...         0.00%       0.000us         0.00%       0.000us       0.000us      11.852ms         0.01%      11.852ms       1.482ms             8  
+                                             aten::silu         0.00%     597.366us         0.01%      17.109ms     203.678us      11.512ms         0.01%      11.512ms     137.053us            84  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      11.512ms         0.01%      11.512ms     137.053us            84  
+void at::native::elementwise_kernel_manual_unroll<12...         0.00%       0.000us         0.00%       0.000us       0.000us      11.407ms         0.01%      11.407ms     128.171us            89  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      10.278ms         0.01%      10.278ms     311.454us            33  
+        miopenSp3AsmConv_v30_3_1_gfx9_fp32_f3x2_stride1         0.00%       0.000us         0.00%       0.000us       0.000us       9.728ms         0.01%       9.728ms     607.975us            16  
+                                            aten::fill_         0.00%     420.590us         0.00%       1.009ms      10.086us       9.034ms         0.01%       9.034ms      90.335us           100  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       9.034ms         0.01%       9.034ms      90.335us           100  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       7.481ms         0.01%       7.481ms     935.109us             8  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       7.043ms         0.01%       7.043ms      80.033us            88  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       6.792ms         0.01%       6.792ms      77.183us            88  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       6.550ms         0.01%       6.550ms     818.794us             8  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       6.303ms         0.01%       6.303ms     787.823us             8  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       5.142ms         0.00%       5.142ms     116.867us            44  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_139kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       5.038ms         0.00%       5.038ms     419.841us            12  
+                               aten::linalg_vector_norm         0.00%       1.721ms         0.04%      40.536ms     460.633us       4.892ms         0.00%       4.892ms      55.594us            88  
+void at::native::reduce_kernel<128, 4, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us       4.892ms         0.00%       4.892ms      55.594us            88  
+Cijk_Ailk_Bljk_SB_MT96x64x32_MI16x16x4x1_SN_1LDSB1_A...         0.00%       0.000us         0.00%       0.000us       0.000us       3.210ms         0.00%       3.210ms     139.558us            23  
+Cijk_Ailk_Bljk_SB_MT96x64x32_MI16x16x4x1_SN_1LDSB1_A...         0.00%       0.000us         0.00%       0.000us       0.000us       2.668ms         0.00%       2.668ms     222.330us            12  
+                         Memcpy DtoD (Device -> Device)         0.00%       0.000us         0.00%       0.000us       0.000us       2.475ms         0.00%       2.475ms      28.775us            86  
+igemm_fwd_gtcx3_nhwc_fp32_bx0_ex0_bt128x64x16_wt32x3...         0.00%       0.000us         0.00%       0.000us       0.000us       2.455ms         0.00%       2.455ms     153.415us            16  
+                                SubTensorOpWithScalar1d         0.00%       0.000us         0.00%       0.000us       0.000us       2.122ms         0.00%       2.122ms      27.921us            76  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       1.884ms         0.00%       1.884ms     235.545us             8  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us     703.596us         0.00%     703.596us      87.949us             8  
+                          batched_transpose_256x4_dword         0.00%       0.000us         0.00%       0.000us       0.000us     648.504us         0.00%     648.504us      32.425us            20  
+                                        aten::clamp_min         0.00%     846.298us         0.05%      52.933ms     601.507us     591.276us         0.00%     591.276us       6.719us            88  
+void at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     591.276us         0.00%     591.276us       6.719us            88  
+                          batched_transpose_4x256_dword         0.00%       0.000us         0.00%       0.000us       0.000us     194.768us         0.00%     194.768us       6.086us            32  
+                          batched_transpose_4x128_dword         0.00%       0.000us         0.00%       0.000us       0.000us     187.164us         0.00%     187.164us       5.199us            36  
+_ZN2ck16tensor_operation6device12_GLOBAL__N_149kerne...         0.00%       0.000us         0.00%       0.000us       0.000us      85.431us         0.00%      85.431us       9.492us             9  
+                           batched_transpose_4x64_dword         0.00%       0.000us         0.00%       0.000us       0.000us      45.711us         0.00%      45.711us       5.079us             9  
+                                        Memset (Device)         0.00%       0.000us         0.00%       0.000us       0.000us      17.039us         0.00%      17.039us      17.039us             1  
+                                              aten::sub         0.00%      31.363us         0.00%      35.898us      35.898us       6.119us         0.00%       6.119us       6.119us             1  
+                                        aten::unsqueeze         0.00%      89.330us         0.00%     110.355us       3.941us       0.000us         0.00%       0.000us       0.000us            28  
+                                       aten::as_strided         0.00%     680.989us         0.00%     680.989us       0.709us       0.000us         0.00%       0.000us       0.000us           960  
+                                            aten::slice         0.00%     996.034us         0.00%       1.408ms       1.903us       0.000us         0.00%       0.000us       0.000us           740  
+                                            aten::clone         0.00%     520.755us         0.00%       3.073ms      25.187us       0.000us         0.00%       8.683ms      71.171us           122  
+                                       aten::empty_like         0.00%     113.910us         0.00%     309.782us       8.605us       0.000us         0.00%       0.000us       0.000us            36  
+                                    aten::empty_strided         0.00%     556.330us         0.00%     556.330us       5.012us       0.000us         0.00%       0.000us       0.000us           111  
+                                        hipLaunchKernel         0.23%     263.486ms         0.23%     263.486ms     170.652us       0.000us         0.00%       0.000us       0.000us          1544  
+                                              aten::pad         0.00%     230.244us         0.00%       5.114ms      44.474us       0.000us         0.00%      40.788ms     354.674us           115  
+                                  aten::constant_pad_nd         0.00%     811.457us         0.00%       4.884ms      42.472us       0.000us         0.00%      40.788ms     354.674us           115  
+                                            aten::empty         0.00%     493.824us         0.00%       1.130ms       8.372us       0.000us         0.00%       0.000us       0.000us           135  
+                                           aten::narrow         0.00%     628.518us         0.00%       1.444ms       2.271us       0.000us         0.00%       0.000us       0.000us           636  
+                                           aten::conv3d         0.00%     470.314us        95.13%      109.245s        1.061s       0.000us         0.00%      109.229s        1.060s           103  
+                                      aten::convolution         0.00%     602.344us        99.86%      114.682s     932.378ms       0.000us         0.00%      114.151s     928.056ms           123  
+                                     aten::_convolution         0.00%     918.588us        99.86%      114.682s     932.373ms       0.000us         0.00%      114.151s     928.056ms           123  
+                                   hipStreamIsCapturing         0.00%      41.215us         0.00%      41.215us       0.565us       0.000us         0.00%       0.000us       0.000us            73  
+                                              hipMalloc         0.01%       5.947ms         0.01%       5.947ms      83.756us       0.000us         0.00%       0.000us       0.000us            71  
+                                                hipInit         0.00%       0.453us         0.00%       0.453us       0.453us       0.000us         0.00%       0.000us       0.000us             1  
+                            hipGetDevicePropertiesR0600         0.00%     513.282us         0.00%     513.282us       0.661us       0.000us         0.00%       0.000us       0.000us           777  
+                                              hipMemset         0.00%      18.371us         0.00%      18.371us      18.371us       0.000us         0.00%       0.000us       0.000us             1  
+                                          hipMemGetInfo         0.00%       4.345us         0.00%       4.345us       4.345us       0.000us         0.00%       0.000us       0.000us             1  
+                                  hipDeviceGetAttribute         0.00%     649.821us         0.00%     649.821us       0.556us       0.000us         0.00%       0.000us       0.000us          1169  
+                                      hipModuleLoadData         0.10%     112.576ms         0.10%     112.576ms       6.254ms       0.000us         0.00%       0.000us       0.000us            18  
+                                        hipModuleUnload         0.00%       1.568ms         0.00%       1.568ms     522.633us       0.000us         0.00%       0.000us       0.000us             3  
+                                         hipEventCreate         0.00%     814.713us         0.00%     814.713us       0.175us       0.000us         0.00%       0.000us       0.000us          4656  
+                               hipExtModuleLaunchKernel         0.02%      23.133ms         0.02%      23.133ms       9.075us       0.000us         0.00%       0.000us       0.000us          2549  
+                                    hipEventSynchronize        99.48%      114.247s        99.48%      114.247s      49.075ms       0.000us         0.00%       0.000us       0.000us          2328  
+                                    hipEventElapsedTime         0.00%       4.457ms         0.00%       4.457ms       1.914us       0.000us         0.00%       0.000us       0.000us          2328  
+                                        hipEventDestroy         0.00%       2.123ms         0.00%       2.123ms       0.456us       0.000us         0.00%       0.000us       0.000us          4656  
+                                         hipEventRecord         0.00%       2.210ms         0.00%       2.210ms       2.159us       0.000us         0.00%       0.000us       0.000us          1024  
+                                                hipFree         0.01%       7.434ms         0.01%       7.434ms     128.173us       0.000us         0.00%       0.000us       0.000us            58  
+                                          aten::reshape         0.00%     392.052us         0.00%       1.029ms       6.312us       0.000us         0.00%       0.000us       0.000us           163  
+                                             aten::view         0.00%     587.709us         0.00%     587.709us       3.867us       0.000us         0.00%       0.000us       0.000us           152  
+                                          aten::resize_         0.00%     210.895us         0.00%     210.895us       1.715us       0.000us         0.00%       0.000us       0.000us           123  
+                                        aten::expand_as         0.00%     139.127us         0.00%     782.318us       8.890us       0.000us         0.00%       0.000us       0.000us            88  
+                                           aten::expand         0.00%     491.278us         0.00%     643.191us       7.309us       0.000us         0.00%       0.000us       0.000us            88  
+                                         hipMemcpyAsync         0.00%     872.866us         0.00%     872.866us      10.150us       0.000us         0.00%       0.000us       0.000us            86  
+                                          aten::dropout         0.00%      44.740us         0.00%      44.740us       1.119us       0.000us         0.00%       0.000us       0.000us            40  
+                                          aten::permute         0.00%     218.200us         0.00%     275.761us       6.894us       0.000us         0.00%       0.000us       0.000us            40  
+                                           aten::conv2d         0.00%      97.954us         4.74%        5.438s     271.921ms       0.000us         0.00%        4.921s     246.073ms            20  
+                                       aten::contiguous         0.00%      15.421us         0.00%     281.976us      25.634us       0.000us         0.00%       1.453ms     132.130us            11  
+                                            aten::chunk         0.00%      25.544us         0.00%     151.081us      30.216us       0.000us         0.00%       0.000us       0.000us             5  
+                                            aten::split         0.00%      51.096us         0.00%     125.537us      25.107us       0.000us         0.00%       0.000us       0.000us             5  
+                     aten::scaled_dot_product_attention         0.00%     156.593us         0.00%       3.092ms     773.007us       0.000us         0.00%      61.314ms      15.328ms             4  
+                                     hipStreamGetDevice         0.00%       4.539us         0.00%       4.539us       0.189us       0.000us         0.00%       0.000us       0.000us            24  
+          aten::_scaled_dot_product_efficient_attention         0.00%      73.652us         0.00%       2.931ms     732.715us       0.000us         0.00%      61.314ms      15.328ms             4  
+                                        aten::transpose         0.00%      29.501us         0.00%      46.861us       1.464us       0.000us         0.00%       0.000us       0.000us            32  
+                                    hipModuleLoadDataEx         0.00%     877.863us         0.00%     877.863us     877.863us       0.000us         0.00%       0.000us       0.000us             1  
+                                  hipModuleLaunchKernel         0.00%      37.324us         0.00%      37.324us       9.331us       0.000us         0.00%       0.000us       0.000us             4  
+                                          aten::squeeze         0.00%      37.597us         0.00%      40.601us       8.120us       0.000us         0.00%       0.000us       0.000us             5  
+                                   aten::_reshape_alias         0.00%      60.044us         0.00%      60.044us       4.619us       0.000us         0.00%       0.000us       0.000us            13  
+                                               aten::to         0.00%      57.683us         0.00%      57.683us       0.614us       0.000us         0.00%       0.000us       0.000us            94  
+                                           aten::select         0.00%      88.731us         0.00%     106.958us       3.961us       0.000us         0.00%       0.000us       0.000us            27  
+                                   hipDeviceSynchronize         0.00%      39.817us         0.00%      39.817us      19.909us       0.000us         0.00%       0.000us       0.000us             2  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 114.841s
+Self CUDA time total: 114.337s
+

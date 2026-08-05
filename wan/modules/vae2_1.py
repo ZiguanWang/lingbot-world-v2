@@ -1,7 +1,7 @@
 import logging
+import os
 
 import torch
-import torch.cuda.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
@@ -31,7 +31,38 @@ class CausalConv3d(nn.Conv3d):
             x = torch.cat([cache_x, x], dim=2)
             padding[4] -= cache_x.shape[2]
         x = F.pad(x, padding)
-
+        if os.getenv("LINGBOT_VAE_CONV2D_SPLIT", "0") == "1":
+            # MIOpen on gfx1201 currently selects a naive NCDHW FP32 solver
+            # for the dominant VAE shapes.  Express the same temporal
+            # cross-correlation as a sum of optimized 2D convolutions.
+            n, channels, time, height, width = x.shape
+            kernel_t = self.weight.shape[2]
+            stride_t, stride_h, stride_w = self.stride
+            dilation_t, dilation_h, dilation_w = self.dilation
+            out_t = (time - dilation_t * (kernel_t - 1) - 1) // stride_t + 1
+            out = None
+            for kernel_idx in range(kernel_t):
+                start = kernel_idx * dilation_t
+                x_2d = x[:, :, start:start + out_t * stride_t:stride_t]
+                x_2d = x_2d.permute(0, 2, 1, 3, 4).reshape(
+                    n * out_t, channels, height, width)
+                part = F.conv2d(
+                    x_2d,
+                    self.weight[:, :, kernel_idx],
+                    bias=None,
+                    stride=(stride_h, stride_w),
+                    dilation=(dilation_h, dilation_w),
+                    groups=self.groups)
+                part = part.reshape(
+                    n, out_t, self.out_channels, part.shape[-2], part.shape[-1]
+                ).permute(0, 2, 1, 3, 4)
+                out = part if out is None else out + part
+            if self.bias is not None:
+                out = out + self.bias.view(1, -1, 1, 1, 1)
+            # The final [N,T,C,H,W] -> [N,C,T,H,W] permute is a view.
+            # RCCL collectives used by the multi-GPU pipeline require a
+            # contiguous condition tensor, matching nn.Conv3d's output.
+            return out.contiguous()
         return super().forward(x)
 
 
@@ -517,19 +548,23 @@ class WanVAE_(nn.Module):
         ## cache
         t = x.shape[2]
         iter_ = 1 + (t - 1) // 4
+        encoded_chunks = []
         for i in range(iter_):
             self._enc_conv_idx = [0]
             if i == 0:
-                out = self.encoder(
+                out_i = self.encoder(
                     x[:, :, :1, :, :],
                     feat_cache=self._enc_feat_map,
                     feat_idx=self._enc_conv_idx)
             else:
-                out_ = self.encoder(
+                out_i = self.encoder(
                     x[:, :, 1 + 4 * (i - 1):1 + 4 * i, :, :],
                     feat_cache=self._enc_feat_map,
                     feat_idx=self._enc_conv_idx)
-                out = torch.cat([out, out_], 2)
+            encoded_chunks.append(out_i)
+        # Repeatedly concatenating a growing temporal tensor is O(T^2) in
+        # copies and dominates long-video encode. Concatenate once instead.
+        out = torch.cat(encoded_chunks, 2)
         mu, log_var = self.conv1(out).chunk(2, dim=1)
         if isinstance(scale[0], torch.Tensor):
             mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(
@@ -539,7 +574,7 @@ class WanVAE_(nn.Module):
         self.clear_cache()
         return mu
 
-    def decode(self, z, scale):
+    def decode(self, z, scale, output_device=None):
         self.clear_cache()
         # z: [b,c,t,h,w]
         if isinstance(scale[0], torch.Tensor):
@@ -549,21 +584,60 @@ class WanVAE_(nn.Module):
             z = z / scale[1] + scale[0]
         iter_ = z.shape[2]
         x = self.conv2(z)
+        decoded_chunks = []
         for i in range(iter_):
             self._conv_idx = [0]
-            if i == 0:
-                out = self.decoder(
-                    x[:, :, i:i + 1, :, :],
-                    feat_cache=self._feat_map,
-                    feat_idx=self._conv_idx)
-            else:
-                out_ = self.decoder(
-                    x[:, :, i:i + 1, :, :],
-                    feat_cache=self._feat_map,
-                    feat_idx=self._conv_idx)
-                out = torch.cat([out, out_], 2)
+            out_i = self.decoder(
+                x[:, :, i:i + 1, :, :],
+                feat_cache=self._feat_map,
+                feat_idx=self._conv_idx)
+            if output_device is not None:
+                out_i = out_i.to(output_device)
+                # Keep the allocator cache intact inside the temporal loop so
+                # MIOpen can reuse its ~7.5-GiB convolution workspace. Calling
+                # empty_cache() here forces repeated workspace allocation on
+                # ROCm and makes driver-side device use climb until 77f OOMs.
+            decoded_chunks.append(out_i)
+        # As in encode, one final concat avoids quadratic device copies.
+        out = torch.cat(decoded_chunks, 2)
         self.clear_cache()
         return out
+
+    def begin_decode_stream(self):
+        """Reset causal decoder state before consuming latent chunks."""
+        self.clear_cache()
+
+    def decode_stream_chunk(self, z, scale, output_device=None):
+        """Decode one or more new latent frames while retaining causal state.
+
+        The first call emits one RGB frame for its first latent frame; each
+        subsequent latent frame emits four RGB frames. Callers must preserve
+        ordering and call ``begin_decode_stream`` once at session start.
+        """
+        if z.ndim != 5 or z.shape[2] < 1:
+            raise ValueError(
+                f"Expected latent chunk [B,C,T,H,W] with T >= 1, got {tuple(z.shape)}")
+        if isinstance(scale[0], torch.Tensor):
+            z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(
+                1, self.z_dim, 1, 1, 1)
+        else:
+            z = z / scale[1] + scale[0]
+        x = self.conv2(z)
+        decoded = []
+        for i in range(x.shape[2]):
+            self._conv_idx = [0]
+            out_i = self.decoder(
+                x[:, :, i:i + 1],
+                feat_cache=self._feat_map,
+                feat_idx=self._conv_idx)
+            if output_device is not None:
+                out_i = out_i.to(output_device)
+            decoded.append(out_i)
+        return torch.cat(decoded, dim=2)
+
+    def end_decode_stream(self):
+        """Release causal decoder history at the end of an interactive session."""
+        self.clear_cache()
 
     def reparameterize(self, mu, log_var):
         std = torch.exp(0.5 * log_var)
@@ -646,16 +720,30 @@ class Wan2_1_VAE:
         """
         videos: A list of videos each with shape [C, T, H, W].
         """
-        with amp.autocast(dtype=self.dtype):
+        with torch.amp.autocast('cuda', dtype=self.dtype):
             return [
                 self.model.encode(u.unsqueeze(0), self.scale).float().squeeze(0)
                 for u in videos
             ]
 
-    def decode(self, zs):
-        with amp.autocast(dtype=self.dtype):
+    def decode(self, zs, output_device=None):
+        with torch.amp.autocast('cuda', dtype=self.dtype):
             return [
                 self.model.decode(u.unsqueeze(0),
-                                  self.scale).float().clamp_(-1, 1).squeeze(0)
+                                  self.scale,
+                                  output_device=output_device).float().clamp_(-1, 1).squeeze(0)
                 for u in zs
             ]
+
+    def begin_decode_stream(self):
+        self.model.begin_decode_stream()
+
+    def decode_stream_chunk(self, z, output_device=None):
+        """Decode a [C,T,H,W] latent chunk and retain history for the next call."""
+        with torch.amp.autocast('cuda', dtype=self.dtype):
+            return self.model.decode_stream_chunk(
+                z.unsqueeze(0), self.scale,
+                output_device=output_device).float().clamp_(-1, 1).squeeze(0)
+
+    def end_decode_stream(self):
+        self.model.end_decode_stream()

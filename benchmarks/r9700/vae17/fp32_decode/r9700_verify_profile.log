@@ -1,0 +1,1 @@
+VIDEO_VERIFY path=benchmark_vae17/fp32_decode/vae17.mp4 valid=True frames=13 expected=13 unique=13 black=0 size=832x464 fps=16 bytes=1445043 mean_min=166.627588 mean_max=183.663430 std_min=49.993310 std_max=55.120091

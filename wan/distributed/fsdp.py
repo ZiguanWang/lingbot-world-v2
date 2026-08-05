@@ -1,4 +1,5 @@
 import gc
+import os
 from functools import partial
 
 import torch
@@ -15,10 +16,16 @@ def shard_model(
     reduce_dtype=torch.float32,
     buffer_dtype=torch.float32,
     process_group=None,
-    sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
+    # In inference SHARD_GRAD_OP keeps successively unsharded transformer
+    # blocks alive until the end of the forward.  The 14B causal DiT reaches
+    # ~29.8 GiB/rank and OOMs on 32 GiB cards. FULL_SHARD reshards each block
+    # after use; the isolated 8-GPU probe peaks at ~10.5 GiB/rank.
+    sharding_strategy=ShardingStrategy.FULL_SHARD,
     sync_module_states=True,
     use_lora=False
 ):
+    if os.getenv("LINGBOT_FSDP_SYNC_MODULE_STATES") is not None:
+        sync_module_states = os.getenv("LINGBOT_FSDP_SYNC_MODULE_STATES") == "1"
     model = FSDP(
         module=model,
         process_group=process_group,

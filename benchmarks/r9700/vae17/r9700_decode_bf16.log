@@ -1,0 +1,12 @@
+/opt/venv/lib/python3.12/site-packages/flash_attn/flash_attn_interface.py:17: UserWarning: flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation
+  warnings.warn("flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation")
+[aiter] import [module_aiter_core] under /home/roywan/aiter/aiter/jit/module_aiter_core.so
+VAE_CONFIG hip_launch_blocking=None miopen_find_mode=None miopen_deterministic=None torch_deterministic=False explicit_sync=False dtype=bf16
+VAE_PROBE stage=model_ready allocated_gib=0.494 reserved_gib=0.498 peak_gib=0.494 device_used_gib=0.752
+VAE_LOADED path=benchmark_latents/sync_17req_13actual.pt shape=(16, 4, 58, 104)
+/home/roywan/lingbot-world-v2/wan/modules/vae2_1.py:663: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with amp.autocast(dtype=self.dtype):
+VAE_PROBE stage=decode_done allocated_gib=0.551 reserved_gib=11.166 peak_gib=8.924 device_used_gib=11.683 shape=(3, 13, 464, 832) finite=15055872/15055872
+VAE_COMPUTE_TIME seconds=305.287057
+VAE_SAVED path=benchmark_vae17/video_tensor_bf16.pt
+VAE_VIDEO_SAVED path=benchmark_vae17/vae17_bf16.mp4

@@ -1,0 +1,8 @@
+/opt/venv/lib/python3.12/site-packages/flash_attn/flash_attn_interface.py:17: UserWarning: flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation
+  warnings.warn("flash_attn_2_cuda (which has ROCm/HIP kernels) not found, falling back to Triton implementation")
+[aiter] import [module_aiter_core] under /home/roywan/aiter/aiter/jit/module_aiter_core.so
+VAE_CONFIG hip_launch_blocking=None miopen_find_mode=None miopen_deterministic=None torch_deterministic=False explicit_sync=False dtype=fp32
+VAE_PROBE stage=model_ready allocated_gib=0.494 reserved_gib=0.498 peak_gib=0.494 device_used_gib=0.752
+VAE_PROBE stage=encode_done allocated_gib=0.553 reserved_gib=3.525 peak_gib=7.004 device_used_gib=3.948 shape=(16, 4, 58, 104) finite=386048/386048
+VAE_COMPUTE_TIME seconds=89.625301
+VAE_SAVED path=benchmark_vae17/condition_fp32_split2d.pt

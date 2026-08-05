@@ -1,4 +1,5 @@
 import math
+import os
 import torch
 import torch.nn.functional as torch_F
 from einops import rearrange
@@ -287,6 +288,28 @@ def sp_dit_forward_causal(
 
     assert len(x) == 1
 
+    probe = os.getenv("LINGBOT_ACTIVATION_PROBE", "0") == "1"
+
+    def log_tensor(name, value):
+        # Rank 0's local sequence shard is sufficient to locate the first bad
+        # stage; doing reductions on every rank adds unnecessary probe cost.
+        if not probe or get_rank() != 0:
+            return
+        value_f = value.detach().float()
+        finite = torch.isfinite(value_f)
+        finite_n = int(finite.sum().item())
+        total_n = value_f.numel()
+        if finite_n:
+            vals = value_f[finite]
+            stats = (vals.min().item(), vals.max().item(), vals.mean().item(),
+                     vals.std().item(), vals.abs().max().item())
+        else:
+            stats = (float("nan"),) * 5
+        print("ACTIVATION stage=%s shape=%s dtype=%s finite=%d/%d "
+              "min=%.7g max=%.7g mean=%.7g std=%.7g absmax=%.7g" %
+              (name, tuple(value.shape), value.dtype, finite_n, total_n,
+               *stats), flush=True)
+
     if self.model_type == 'i2v':
         assert y is not None
     # params
@@ -296,6 +319,7 @@ def sp_dit_forward_causal(
 
     if y is not None:
         x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+    log_tensor("sp_input_concat", x[0])
 
     # embeddings
     x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -305,6 +329,7 @@ def sp_dit_forward_causal(
     seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long)[0]
     assert seq_lens.max() <= seq_len
     x = torch.cat(x)
+    log_tensor("sp_patch_embedding", x)
 
     # Pad sequence to be divisible by world_size for SP chunking.
     # int(seq_lens) is one cudaStreamSynchronize; cache it once so each
@@ -328,6 +353,8 @@ def sp_dit_forward_causal(
                                     t).unflatten(0, (bt, padded_seq_lens)).float())
         e0 = self.time_projection(e).unflatten(2, (6, self.dim))
         assert e.dtype == torch.float32 and e0.dtype == torch.float32
+    log_tensor("sp_time_embedding", e)
+    log_tensor("sp_time_projection", e0)
 
     # context
     context_lens = None
@@ -336,6 +363,7 @@ def sp_dit_forward_causal(
             torch.cat([u, u.new_zeros(self.text_len - u.size(0), u.size(1))])
             for u in context
         ]))
+    log_tensor("sp_text_embedding", context)
 
     # cam
     if dit_cond_dict is not None and "c2ws_plucker_emb" in dit_cond_dict:
@@ -355,6 +383,7 @@ def sp_dit_forward_causal(
         c2ws_hidden_states = self.c2ws_hidden_states_layer2(
             torch_F.silu(self.c2ws_hidden_states_layer1(c2ws_plucker_emb)))
         c2ws_plucker_emb = c2ws_plucker_emb + c2ws_hidden_states
+        log_tensor("sp_camera_embedding_full", c2ws_plucker_emb)
 
         cam_len = c2ws_plucker_emb.size(1)
         if cam_len < padded_seq_lens:
@@ -375,6 +404,7 @@ def sp_dit_forward_causal(
     x = torch.chunk(x, get_world_size(), dim=1)[get_rank()]
     e = torch.chunk(e, get_world_size(), dim=1)[get_rank()]
     e0 = torch.chunk(e0, get_world_size(), dim=1)[get_rank()]
+    log_tensor("sp_local_input", x)
 
     kwargs = dict(
         e=e0,
@@ -398,15 +428,21 @@ def sp_dit_forward_causal(
             }
         )
         x = block(x, **kwargs)
+        if os.getenv("LINGBOT_FORCE_BLOCK_SYNC", "0") == "1":
+            torch.cuda.synchronize(x.device)
+        log_tensor(f"sp_block_{block_index:02d}", x)
 
     # head
     x = self.head(x, e)
+    log_tensor("sp_head_local", x)
 
     # Context Parallel
     x = gather_forward(x, dim=1)
+    log_tensor("sp_head_gathered", x)
 
     # unpatchify
     x = self.unpatchify(x, grid_sizes)
+    log_tensor("sp_unpatchify", x[0])
 
     return [u.float() for u in x]
 
@@ -450,6 +486,14 @@ def sp_attn_forward_causal(
     """
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
     sp_size = get_world_size()
+    sync_boundaries = {
+        item.strip() for item in
+        os.getenv("LINGBOT_SYNC_BOUNDARIES", "").split(",") if item.strip()
+    }
+
+    def sync_if(name):
+        if name in sync_boundaries:
+            torch.cuda.synchronize(x.device)
 
     # query, key, value function
     def qkv_fn(x):
@@ -465,6 +509,7 @@ def sp_attn_forward_causal(
     q = all_to_all(q, scatter_dim=2, gather_dim=1)
     k = all_to_all(k, scatter_dim=2, gather_dim=1)
     v = all_to_all(v, scatter_dim=2, gather_dim=1)
+    sync_if("qkv_a2a")
 
     # padded_seq_lens = s * sp_size may exceed seq_lens due to SP padding
     padded_seq_lens = s * sp_size
@@ -524,9 +569,11 @@ def sp_attn_forward_causal(
 
     k_cache = kv_cache["k"][:, max(0, local_end_index - max_attention_size):local_end_index]
     v_cache = kv_cache["v"][:, max(0, local_end_index - max_attention_size):local_end_index]
+    sync_if("kv_write")
 
     # Attention on local heads, full key/value cache for this rank
     x_local = flash_attention(query, k_cache, v_cache)  # [B, seq_lens, local_heads, d]
+    sync_if("flash_attention")
 
     kv_cache["global_end_index"].fill_(current_end)
     kv_cache["local_end_index"].fill_(local_end_index)
@@ -543,6 +590,7 @@ def sp_attn_forward_causal(
     # all-to-all back: gather heads, scatter sequence
     # [B, s, N/p, d] -> [B, s/p, N, d]
     x_full = all_to_all(x_local, scatter_dim=1, gather_dim=2)
+    sync_if("output_a2a")
 
     # output
     x_full = x_full.flatten(2)

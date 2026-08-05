@@ -1,5 +1,6 @@
 """Some of the functions are borrowed from SelfForcing (https://github.com/guandeh17/Self-Forcing)."""
 import math
+import os
 from einops import rearrange
 
 import torch
@@ -539,6 +540,31 @@ class WanModelFast(ModelMixin, ConfigMixin):
         if self.model_type == 'i2v':
             assert y is not None
 
+        # Numerical probe for debugging bad generations.  It is deliberately
+        # opt-in because the reductions below synchronize the device.
+        probe = os.getenv("LINGBOT_ACTIVATION_PROBE", "0") == "1"
+        probe_rank = (not torch.distributed.is_initialized()
+                      or torch.distributed.get_rank() == 0)
+
+        def log_tensor(name, value):
+            if not (probe and probe_rank):
+                return
+            value_f = value.detach().float()
+            finite = torch.isfinite(value_f)
+            finite_n = int(finite.sum().item())
+            total_n = value_f.numel()
+            if finite_n:
+                vals = value_f[finite]
+                stats = (vals.min().item(), vals.max().item(),
+                         vals.mean().item(), vals.std().item(),
+                         vals.abs().max().item())
+            else:
+                stats = (float("nan"),) * 5
+            print("ACTIVATION stage=%s shape=%s dtype=%s finite=%d/%d "
+                  "min=%.7g max=%.7g mean=%.7g std=%.7g absmax=%.7g" %
+                  (name, tuple(value.shape), value.dtype, finite_n, total_n,
+                   *stats), flush=True)
+
         # params
         device = self.patch_embedding.weight.device
         if self.freqs.device != device:
@@ -546,6 +572,7 @@ class WanModelFast(ModelMixin, ConfigMixin):
 
         if y is not None:
             x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        log_tensor("dit_input_concat", x[0])
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -555,6 +582,7 @@ class WanModelFast(ModelMixin, ConfigMixin):
         seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long)
         assert seq_lens.max() <= seq_len
         x = torch.cat(x)
+        log_tensor("patch_embedding", x)
 
         # time embeddings
         if t.dim() == 1:
@@ -567,6 +595,8 @@ class WanModelFast(ModelMixin, ConfigMixin):
                                         t).unflatten(0, (bt, seq_lens)).float())
             e0 = self.time_projection(e).unflatten(2, (6, self.dim))
             assert e.dtype == torch.float32 and e0.dtype == torch.float32
+        log_tensor("time_embedding", e)
+        log_tensor("time_projection", e0)
 
         # context
         context_lens = None
@@ -576,6 +606,7 @@ class WanModelFast(ModelMixin, ConfigMixin):
                     [u, u.new_zeros(self.text_len - u.size(0), u.size(1))])
                 for u in context
             ]))
+        log_tensor("text_embedding", context)
 
         # cam
         if dit_cond_dict is not None and "c2ws_plucker_emb" in dit_cond_dict:
@@ -597,6 +628,7 @@ class WanModelFast(ModelMixin, ConfigMixin):
             dit_cond_dict = dict(dit_cond_dict)
             dit_cond_dict["c2ws_plucker_emb"] = (
                 c2ws_plucker_emb + c2ws_hidden_states)
+            log_tensor("camera_embedding", dit_cond_dict["c2ws_plucker_emb"])
 
         # arguments
         kwargs = dict(
@@ -620,12 +652,15 @@ class WanModelFast(ModelMixin, ConfigMixin):
                 }
             )
             x = block(x, **kwargs)
+            log_tensor(f"block_{block_index:02d}", x)
 
         # head
         x = self.head(x, e)
+        log_tensor("head", x)
 
         # unpatchify
         x = self.unpatchify(x, grid_sizes)
+        log_tensor("unpatchify", x[0])
 
         return [u.float() for u in x]
 
@@ -678,4 +713,3 @@ class WanModelFast(ModelMixin, ConfigMixin):
 
         # init output layer
         nn.init.zeros_(self.head.head.weight)
-

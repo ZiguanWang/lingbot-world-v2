@@ -2,6 +2,11 @@
 
 set -x
 
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_root=$(cd -- "$script_dir/../.." && pwd)
+cd "$repo_root"
+export PYTHONPATH="$repo_root:${PYTHONPATH-}"
+
 WEIGHT_DIR=${1:-lingbot-world-v2-14b-causal-fast}
 FRAME=${2:-361}
 ASSETS_DIR=${3:-}
